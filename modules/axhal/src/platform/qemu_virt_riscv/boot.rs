@@ -2,11 +2,11 @@ use riscv::register::satp;
 
 use axconfig::{PHYS_VIRT_OFFSET, TASK_STACK_SIZE};
 
-const SBI_CONSOLE_GETCHAR: usize = 1;
-
 use crate::console::putchar;
 
 /*
+const SBI_CONSOLE_GETCHAR: usize = 1;
+
 unsafe fn console_getchar() {
     return sbi_call(SBI_CONSOLE_GETCHAR);
 }
@@ -17,7 +17,10 @@ fn sbi_call(which: usize) {
     }
 }*/
 
+// 下面是最新版本的代码，通过利用arceos本身提供的函数进行输出，同时保证了华山派输出的正确性
+// 一直没明白的是为什么需要先手动输出才能进行正常输出
 unsafe fn console_putchar() {
+    // 输出 hello from sbi
     putchar(10);
     putchar(72);
     putchar(69);

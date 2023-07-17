@@ -11,7 +11,7 @@
 	images {
 		kernel-1 {
 			description = "cvitek kernel ArceOS for CV1811H";
-			data = /incbin/("helloworld_qemu-virt-riscv.bin");
+			data = /incbin/("shell_qemu-virt-riscv.bin");
 			type = "kernel";
 			arch = "riscv";
 			os = "linux";
