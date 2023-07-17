@@ -178,11 +178,15 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     }
 
     info!("Primary CPU {} init OK.", cpu_id);
+    // 因为发现下面的原子变量的fetch_add操作在华山派开发板上不支持，故目前的解决思路是注释掉与这个原子操作相关的代码段
+    // https://rustwiki.org/zh-CN/std/sync/atomic/struct.AtomicUsize.html#method.fetch_add
+    /*
     INITED_CPUS.fetch_add(1, Ordering::Relaxed);
 
     while !is_init_ok() {
         core::hint::spin_loop();
     }
+    */
 
     unsafe { main() };
 

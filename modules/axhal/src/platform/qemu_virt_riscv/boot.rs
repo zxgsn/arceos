@@ -2,6 +2,40 @@ use riscv::register::satp;
 
 use axconfig::{PHYS_VIRT_OFFSET, TASK_STACK_SIZE};
 
+const SBI_CONSOLE_GETCHAR: usize = 1;
+
+use crate::console::putchar;
+
+/*
+unsafe fn console_getchar() {
+    return sbi_call(SBI_CONSOLE_GETCHAR);
+}
+fn sbi_call(which: usize) {
+    unsafe {
+        // 加了下面一行才可以在华山派上输出
+        core::arch::asm!("ecall", in("x17") which);
+    }
+}*/
+
+unsafe fn console_putchar() {
+    putchar(10);
+    putchar(72);
+    putchar(69);
+    putchar(76);
+    putchar(76);
+    putchar(79);
+    putchar(32);
+    putchar(70);
+    putchar(82);
+    putchar(79);
+    putchar(77);
+    putchar(32);
+    putchar(83);
+    putchar(66);
+    putchar(73);
+    putchar(10);
+}
+
 #[link_section = ".bss.stack"]
 static mut BOOT_STACK: [u8; TASK_STACK_SIZE] = [0; TASK_STACK_SIZE];
 
@@ -37,6 +71,7 @@ unsafe extern "C" fn _start() -> ! {
         add     sp, sp, t0              // setup boot stack
 
         call    {init_boot_page_table}
+        call    {console_putchar}
         call    {init_mmu}              // setup boot page table and enabel MMU
 
         li      s2, {phys_virt_offset}  // fix up virtual high address
@@ -54,6 +89,7 @@ unsafe extern "C" fn _start() -> ! {
         init_boot_page_table = sym init_boot_page_table,
         init_mmu = sym init_mmu,
         entry = sym super::rust_entry,
+        console_putchar = sym console_putchar,
         options(noreturn),
     )
 }
