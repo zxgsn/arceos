@@ -27,6 +27,8 @@ bitflags::bitflags! {
         /// Indicates the virtual page has been written since the last time the
         /// D bit was cleared.
         const D =   1 << 7;
+        /// Kernel
+        const K =   7 << 60;
     }
 }
 
@@ -54,7 +56,7 @@ impl From<MappingFlags> for PTEFlags {
         if f.is_empty() {
             return Self::empty();
         }
-        let mut ret = Self::V;
+        let mut ret = Self::V | Self::K;
         if f.contains(MappingFlags::READ) {
             ret |= Self::R;
         }

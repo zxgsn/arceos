@@ -77,6 +77,7 @@ include scripts/make/utils.mk
 include scripts/make/build.mk
 include scripts/make/qemu.mk
 include scripts/make/test.mk
+include scripts/make/cv1811.mk
 ifeq ($(PLATFORM), raspi4-aarch64)
   include scripts/make/raspi4.mk
 endif
