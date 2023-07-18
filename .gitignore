@@ -4,5 +4,6 @@
 *.asm
 *.img
 *.bin
+*.vi
 actual.out
 qemu.log
