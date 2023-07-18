@@ -8,6 +8,7 @@ authors = ["Yuekai Jia <equation618@gmail.com>"]
 
 [features]
 use_ramfs = ["axfs/myfs", "dep:axfs_vfs", "dep:axfs_ramfs", "dep:crate_interface"]
+use-ramdisk = ["use_ramfs", "libax/use-ramdisk"]
 default = []
 
 [dependencies]

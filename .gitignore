@@ -3,5 +3,6 @@
 .DS_Store
 *.asm
 *.img
+*.bin
 actual.out
 qemu.log
