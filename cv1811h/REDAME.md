@@ -1,7 +1,7 @@
 # 前置环境搭配
 见 https://github.com/orgs/rcore-os/discussions/24
 # 此文件夹使用
-直接执行mkitb.cv1811h.sh脚本即可自动生成.itb文件并且mv到srv/tftp/文件夹下
+直接执行mkitb.cv1811h.sh脚本即可自动生成.itb文件并且mv到srv/tftp/文件夹下  
 常见问题：mkimage执行失败：下载u-boot-tools工具即可
 # 华山派上操作
 1. 配置ip地址，保持与tftp服务器在一个网段
