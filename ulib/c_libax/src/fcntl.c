@@ -1,6 +1,9 @@
 #include <fcntl.h>
 #include <libax.h>
+#include <stdarg.h>
 #include <stdio.h>
+
+#ifdef AX_CONFIG_FD
 
 int fcntl(int fd, int cmd, ... /* arg */)
 {
@@ -13,7 +16,10 @@ int fcntl(int fd, int cmd, ... /* arg */)
     return ax_fcntl(fd, cmd, arg);
 }
 
+#endif // AX_CONFIG_FD
+
 #ifdef AX_CONFIG_FS
+
 int open(const char *filename, int flags, ...)
 {
     mode_t mode = 0;
@@ -27,4 +33,19 @@ int open(const char *filename, int flags, ...)
 
     return ax_open(filename, flags, mode);
 }
-#endif
+
+// TODO
+int posix_fadvise(int __fd, unsigned long __offset, unsigned long __len, int __advise)
+{
+    unimplemented();
+    return 0;
+}
+
+// TODO
+int sync_file_range(int fd, off_t pos, off_t len, unsigned flags)
+{
+    unimplemented();
+    return 0;
+}
+
+#endif // AX_CONFIG_FS

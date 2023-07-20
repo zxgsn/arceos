@@ -1,3 +1,4 @@
+mod bench;
 mod dns;
 mod listen_table;
 mod tcp;
@@ -24,10 +25,12 @@ pub use self::dns::resolve_socket_addr;
 pub use self::tcp::TcpSocket;
 pub use self::udp::UdpSocket;
 
-const IP: IpAddress = IpAddress::v4(10, 0, 2, 15); // QEMU user networking default IP
-const GATEWAY: IpAddress = IpAddress::v4(10, 0, 2, 2); // QEMU user networking gateway
-const DNS_SEVER: IpAddress = IpAddress::v4(8, 8, 8, 8);
+const IP: &str = env!("AX_IP");
+const GATEWAY: &str = env!("AX_GW");
+const DNS_SEVER: &str = "8.8.8.8";
 const IP_PREFIX: u8 = 24;
+
+const STANDARD_MTU: usize = 1500;
 
 const RANDOM_SEED: u64 = 0xA2CE_05A2_CE05_A2CE;
 
@@ -78,7 +81,8 @@ impl<'a> SocketSetWrapper<'a> {
     }
 
     pub fn new_dns_socket() -> socket::dns::Socket<'a> {
-        socket::dns::Socket::new(&[DNS_SEVER], vec![])
+        let server_addr = DNS_SEVER.parse().expect("invalid DNS server address");
+        socket::dns::Socket::new(&[server_addr], vec![])
     }
 
     pub fn add<T: AnySocket<'a>>(&self, socket: T) -> SocketHandle {
@@ -287,11 +291,24 @@ pub fn poll_interfaces() {
     SOCKET_SET.poll_interfaces();
 }
 
+/// Benchmark raw socket transmit bandwidth.
+pub fn bench_transmit() {
+    ETH0.dev.lock().bench_transmit_bandwidth();
+}
+
+/// Benchmark raw socket receive bandwidth.
+pub fn bench_receive() {
+    ETH0.dev.lock().bench_receive_bandwidth();
+}
+
 pub(crate) fn init(net_dev: AxNetDevice) {
     let ether_addr = EthernetAddress(net_dev.mac_address().0);
     let eth0 = InterfaceWrapper::new("eth0", net_dev, ether_addr);
-    eth0.setup_ip_addr(IP, IP_PREFIX);
-    eth0.setup_gateway(GATEWAY);
+
+    let ip = IP.parse().expect("invalid IP address");
+    let gateway = GATEWAY.parse().expect("invalid gateway IP address");
+    eth0.setup_ip_addr(ip, IP_PREFIX);
+    eth0.setup_gateway(gateway);
 
     ETH0.init_by(eth0);
     SOCKET_SET.init_by(SocketSetWrapper::new());
@@ -299,6 +316,6 @@ pub(crate) fn init(net_dev: AxNetDevice) {
 
     info!("created net interface {:?}:", ETH0.name());
     info!("  ether:    {}", ETH0.ethernet_address());
-    info!("  ip:       {}/{}", IP, IP_PREFIX);
-    info!("  gateway:  {}", GATEWAY);
+    info!("  ip:       {}/{}", ip, IP_PREFIX);
+    info!("  gateway:  {}", gateway);
 }

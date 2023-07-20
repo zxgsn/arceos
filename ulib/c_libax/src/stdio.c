@@ -34,7 +34,7 @@ static int __write_buffer(FILE *f)
         return 0;
     if (f->fd == stdout->fd || f->fd == stderr->fd) {
         r = ax_print_str(f->buf, f->buffer_len);
-#ifdef AX_CONFIG_ALLOC
+#ifdef AX_CONFIG_FD
     } else {
         r = write(f->fd, f->buf, f->buffer_len);
 #endif
@@ -74,15 +74,11 @@ static int out(FILE *f, const char *s, size_t l)
     return ret;
 }
 
-// int getchar()
-// {
-//     char byte = 0;
-//     if (1 == read(stdin, &byte, 1)) {
-//         return byte;
-//     } else {
-//         return EOF;
-//     }
-// }
+int getchar(void)
+{
+    unimplemented();
+    return 0;
+}
 
 int fflush(FILE *f)
 {
@@ -158,7 +154,14 @@ int vfprintf(FILE *restrict f, const char *restrict fmt, va_list ap)
     return vfctprintf(__out_wrapper, f, fmt, ap);
 }
 
-#if defined(AX_CONFIG_ALLOC) && defined(AX_CONFIG_FS)
+// TODO
+int sscanf(const char *restrict __s, const char *restrict __format, ...)
+{
+    unimplemented();
+    return 0;
+}
+
+#ifdef AX_CONFIG_FS
 
 int __fmodeflags(const char *mode)
 {
@@ -228,4 +231,178 @@ char *fgets(char *restrict s, int n, FILE *restrict f)
     return s;
 }
 
-#endif
+size_t fread(void *restrict destv, size_t size, size_t nmemb, FILE *restrict f)
+{
+    size_t total = size * nmemb;
+    size_t read_len = 0;
+    size_t len = 0;
+    do {
+        len = ax_read(f->fd, destv + read_len, total - read_len);
+        if (len < 0)
+            break;
+        read_len += len;
+    } while (len > 0);
+    return read_len == size * nmemb ? nmemb : read_len / size;
+}
+
+size_t fwrite(const void *restrict src, size_t size, size_t nmemb, FILE *restrict f)
+{
+    size_t total = size * nmemb;
+    size_t write_len = 0;
+    size_t len = 0;
+    do {
+        len = ax_write(f->fd, src + write_len, total - write_len);
+        if (len < 0)
+            break;
+        write_len += len;
+    } while (len > 0);
+    return write_len == size * nmemb ? nmemb : write_len / size;
+}
+
+int fputs(const char *restrict s, FILE *restrict f)
+{
+    size_t l = strlen(s);
+    return (fwrite(s, 1, l, f) == l) - 1;
+}
+
+int fclose(FILE *f)
+{
+    return ax_close(f->fd);
+}
+
+// TODO
+int rename(const char *__old, const char *__new)
+{
+    unimplemented();
+    return 0;
+}
+
+int fileno(FILE *f)
+{
+    return f->fd;
+}
+
+int feof(FILE *f)
+{
+    unimplemented();
+    return 0;
+}
+
+// TODO
+int fseek(FILE *__stream, long __off, int __whence)
+{
+    unimplemented();
+    return 0;
+}
+
+// TODO
+off_t ftello(FILE *__stream)
+{
+    unimplemented();
+    return 0;
+}
+
+// TODO
+char *tmpnam(char *buf)
+{
+    unimplemented();
+    return 0;
+}
+
+// TODO
+void clearerr(FILE *f)
+{
+    unimplemented();
+}
+
+// TODO
+int ferror(FILE *f)
+{
+    unimplemented();
+    return 0;
+}
+
+// TODO
+FILE *freopen(const char *restrict filename, const char *restrict mode, FILE *restrict f)
+{
+    unimplemented();
+    return 0;
+}
+
+// TODO
+int fscanf(FILE *restrict f, const char *restrict fmt, ...)
+{
+    unimplemented();
+    return 0;
+}
+
+// TODO
+long ftell(FILE *f)
+{
+    unimplemented();
+    return 0;
+}
+
+int getc(FILE *f)
+{
+    unimplemented();
+    return 0;
+}
+
+// TODO
+int remove(const char *path)
+{
+    unimplemented();
+    return 0;
+}
+
+// TODO
+int setvbuf(FILE *restrict f, char *restrict buf, int type, size_t size)
+{
+    unimplemented();
+    return 0;
+}
+
+// TODO
+FILE *tmpfile(void)
+{
+    unimplemented();
+    return NULL;
+}
+
+int ungetc(int c, FILE *f)
+{
+    unimplemented();
+    return 0;
+}
+
+ssize_t getdelim(char **restrict s, size_t *restrict n, int delim, FILE *restrict f)
+{
+    unimplemented();
+    return 0;
+}
+
+ssize_t getline(char **restrict s, size_t *restrict n, FILE *restrict f)
+{
+    return getdelim(s, n, '\n', f);
+}
+
+int __uflow(FILE *f)
+{
+    unimplemented();
+    return 0;
+}
+
+int getc_unlocked(FILE *f)
+{
+    unimplemented();
+    return 0;
+}
+
+FILE *fdopen(int fd, const char *mode)
+{
+    unimplemented();
+    return NULL;
+}
+
+#endif // AX_CONFIG_FS

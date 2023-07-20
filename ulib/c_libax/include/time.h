@@ -30,12 +30,19 @@ size_t strftime(char *__restrict__ _Buf, size_t _SizeInBytes, const char *__rest
 struct tm *gmtime(const time_t *timer);
 
 struct tm *localtime(const time_t *timep);
+struct tm *localtime_r(const time_t *__restrict__ __timer, struct tm *__restrict__ __tp);
+
 time_t time(time_t *t);
 int clock_gettime(clockid_t _clk, struct timespec *ts);
 int nanosleep(const struct timespec *requested_time, struct timespec *remaining);
+void tzset(void);
 
-#ifdef AX_CONFIG_FP_SIMD
+int setitimer(int which, const struct itimerval *restrict new, struct itimerval *restrict old);
+char *ctime_r(const time_t *t, char *buf);
+clock_t clock(void);
+
 double difftime(time_t, time_t);
-#endif
 
-#endif
+time_t mktime(struct tm *);
+
+#endif // __TIME_H__

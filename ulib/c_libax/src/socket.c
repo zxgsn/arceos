@@ -1,9 +1,13 @@
-#include <libax.h>
+#ifdef AX_CONFIG_NET
+
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#if defined(AX_CONFIG_NET)
+#include <libax.h>
+
 int socket(int domain, int type, int protocol)
 {
     return ax_socket(domain, type, protocol);
@@ -32,6 +36,24 @@ int listen(int fd, int backlog)
 int accept(int fd, struct sockaddr *restrict addr, socklen_t *restrict len)
 {
     return ax_accept(fd, addr, len);
+}
+
+int accept4(int fd, struct sockaddr *restrict addr, socklen_t *restrict len, int flg)
+{
+    if (!flg)
+        return accept(fd, addr, len);
+    if (flg & ~(SOCK_CLOEXEC | SOCK_NONBLOCK)) {
+        errno = EINVAL;
+        return -1;
+    }
+    int ret = accept(fd, addr, len);
+    if (ret < 0)
+        return ret;
+    if (flg & SOCK_CLOEXEC)
+        fcntl(ret, F_SETFD, FD_CLOEXEC);
+    if (flg & SOCK_NONBLOCK)
+        fcntl(ret, F_SETFL, O_NONBLOCK);
+    return ret;
 }
 
 ssize_t send(int fd, const void *buf, size_t n, int flags)
@@ -70,7 +92,8 @@ int getsockopt(int fd, int level, int optname, void *restrict optval, socklen_t 
 
 int setsockopt(int fd, int level, int optname, const void *optval, socklen_t optlen)
 {
-    unimplemented();
+    unimplemented("fd: %d, level: %d, optname: %d, optval: %d, optlen: %d", fd, level, optname,
+                  *(int *)optval, optlen);
     return 0;
 }
 
@@ -83,4 +106,12 @@ int getpeername(int sockfd, struct sockaddr *restrict addr, socklen_t *restrict 
 {
     return ax_getpeername(sockfd, addr, addrlen);
 }
-#endif
+
+// TODO
+ssize_t sendmsg(int fd, const struct msghdr *msg, int flags)
+{
+    unimplemented();
+    return 0;
+}
+
+#endif // AX_CONFIG_NET
