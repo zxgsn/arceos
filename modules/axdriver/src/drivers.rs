@@ -69,7 +69,7 @@ cfg_if::cfg_if! {
 }
 
 cfg_if::cfg_if! {
-    if #[cfg(net_dev = "cvitek")] {
+    if #[cfg(net_dev = "cviteknic")] {
         use super::CvitekNicTraitsImpl;
         pub struct CvitekNicDriver;
         register_net_driver!(CvitekNicDriver, driver_net::cvitek::CvitekNic<CvitekNicTraitsImpl>);

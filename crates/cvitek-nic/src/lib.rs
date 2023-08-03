@@ -9,3 +9,4 @@ mod cvitek_defs;
 mod cvitek_main;
 
 pub use cvitek_main::CvitekNicDevice;
+pub use cvitek_main::CvitekNicTraits;

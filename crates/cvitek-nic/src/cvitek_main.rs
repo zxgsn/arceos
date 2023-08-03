@@ -8,18 +8,20 @@ use core::{mem, ptr};
 
 use super::cvitek_defs::*;
 
-pub struct CvitekNicDevice {
+pub struct CvitekNicDevice<A: CvitekNicTraits> {
     iobase: usize,
     // rx_rings: Vec<RxRing>,
     // tx_rings: Vec<TxRing>,
+    phantom: PhantomData<A>,
 }
 
-impl CvitekNicDevice {
+impl <A: CvitekNicTraits> CvitekNicDevice<A> {
     pub fn new(iobase: usize) -> Self {
-        let mut nic = CvitekNicDevice {
+        let mut nic = CvitekNicDevice::<A> {
             iobase,
             // rx_rings: Vec::new(),
             // tx_rings: Vec::new(),
+            phantom: PhantomData,
         };
         nic.init();
         nic
@@ -55,12 +57,13 @@ pub struct TxDes {
     pub tdes3: u32,
 }
 
-pub struct RxRing {
+pub struct RxRing<A: CvitekNicTraits> {
     pub iobase: usize,
     pub rd: Dma<RxDes>,
+    phantom: PhantomData<A>,
 }
 
-impl RxRing {
+impl<A:CvitekNicTraits> RxRing<A> {
     pub fn new() -> Self {
         todo!()
         // let size = mem::size_of::<RxDes>() * 512;
@@ -192,4 +195,18 @@ impl<T> Dma<T> {
         unsafe { ptr.write(*value) };
         true
     }
+}
+
+pub trait CvitekNicTraits {
+    fn phys_to_virt(pa: usize) -> usize {
+        pa
+    }
+    fn virt_to_phys(va: usize) -> usize {
+        va
+    }
+    fn dma_alloc_pages(pages: usize) -> (usize, usize);
+
+    fn dma_free_pages(vaddr: usize, pages: usize);
+
+    fn mdelay(m_times: usize);
 }

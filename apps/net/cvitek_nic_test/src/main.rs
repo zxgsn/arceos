@@ -1,11 +1,11 @@
 #![no_std]
 #![no_main]
 
-#[marco_use]
+#[macro_use]
 extern crate libax;
 extern crate alloc;
 
 #[no_mangle]
 fn main() {
-    libax::println!("Hello world!");
+    libax::println!("Hello world! test for cvitek-nic");
 }

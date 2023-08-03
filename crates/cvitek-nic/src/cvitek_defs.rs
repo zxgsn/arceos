@@ -1,3 +1,6 @@
+
+// need to fix
+
 pub const DMA_BUS_MODE: usize = 0x00001000; /* Bus Mode */
 pub const DMA_XMT_POLL_DEMAND: usize = 0x00001004; /* Transmit Poll Demand */
 pub const DMA_RCV_POLL_DEMAND: usize = 0x00001008; /* Received Poll Demand */
