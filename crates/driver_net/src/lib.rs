@@ -8,9 +8,17 @@ mod net_buf;
 
 use core::ptr::NonNull;
 
+#[cfg(feature = "cviteknic")]
+pub mod cvitek;
+
+#[macro_use]
+extern crate log;
+extern crate alloc;
+
 #[doc(no_inline)]
 pub use driver_common::{BaseDriverOps, DevError, DevResult, DeviceType};
-
+pub use cvitek_nic::CvitekNicDevice;
+pub use cvitek::CvitekNicTraits;
 pub use self::net_buf::{NetBuf, NetBufBox, NetBufPool};
 
 /// The ethernet address of the NIC (MAC address).

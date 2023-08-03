@@ -45,7 +45,7 @@ use-ramdisk = ["axdriver?/ramdisk", "axfs?/use-ramdisk"]
 
 # Networking
 net = ["alloc", "axruntime/net", "dep:axdriver", "dep:axnet"]
-
+cviteknic = ["alloc", "axruntime/cviteknic", "axdriver?/cviteknic", "dep:axnet"]
 # Pipe
 pipe = ["alloc"]
 

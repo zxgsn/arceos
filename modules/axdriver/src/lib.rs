@@ -75,6 +75,11 @@ mod structs;
 #[cfg(feature = "virtio")]
 mod virtio;
 
+#[cfg(feature = "cviteknic")]
+mod cvitek_traits;
+#[cfg(feature = "cviteknic")]
+pub use cvitek_traits::CvitekNicTraitsImpl;
+
 pub mod prelude;
 
 #[allow(unused_imports)]

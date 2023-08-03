@@ -4,6 +4,7 @@
 
 use crate::AxDeviceEnum;
 use driver_common::DeviceType;
+use driver_net::CvitekNicTraits;
 
 #[cfg(feature = "virtio")]
 use crate::virtio::{self, VirtIoDevMeta};
@@ -62,6 +63,22 @@ cfg_if::cfg_if! {
                 Some(AxDeviceEnum::from_block(
                     driver_block::ramdisk::RamDisk::new(0x100_0000), // 16 MiB
                 ))
+            }
+        }
+    }
+}
+
+cfg_if::cfg_if! {
+    if #[cfg(net_dev = "cvitek")] {
+        use super::CvitekNicTraitsImpl;
+        pub struct CvitekNicDriver;
+        register_net_driver!(CvitekNicDriver, driver_net::cvitek::CvitekNic<CvitekNicTraitsImpl>);
+
+        impl DriverProbe for CvitekNicDriver {
+            fn probe_global() -> Option<AxDeviceEnum> {
+                use driver_net::cvitek::CvitekNic;
+                let cvitek_nic = CvitekNic::init(CvitekNicTraitsImpl);
+                return Some(AxDeviceEnum::from_net(cvitek_nic));
             }
         }
     }
