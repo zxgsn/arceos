@@ -1,6 +1,3 @@
-
-// need to fix
-
 pub const DMA_BUS_MODE: usize = 0x00001000; /* Bus Mode */
 pub const DMA_XMT_POLL_DEMAND: usize = 0x00001004; /* Transmit Poll Demand */
 pub const DMA_RCV_POLL_DEMAND: usize = 0x00001008; /* Received Poll Demand */
@@ -16,7 +13,7 @@ pub const DMA_BUS_MODE_SFT_RESET: usize = 0x00000001; /* Software Reset */
 pub const DMA_CHAN_TX_BASE_ADDR_HI: usize = 0x00001110;
 pub const DMA_CHAN_TX_BASE_ADDR: usize = 0x00001114;
 pub const DMA_CHAN_TX_RING_LEN: usize = 0x0000112C;
-pub const DMA_CHAN_TX_END_ADDR: usize = 0x00001120;
+pub const DMA_CHAN_TX_END_ADDR: usize = 0x1120;
 
 pub const DMA_CHAN_RX_BASE_ADDR_HI: usize = 0x00001118;
 pub const DMA_CHAN_RX_BASE_ADDR: usize = 0x0000111C;
@@ -75,3 +72,13 @@ pub const RX_RING_LEN: u32 = 512; // bit 0
 
 pub const NUM_RX_QUEUE: usize = 1;
 pub const NUM_TX_QUEUE: usize = 1;
+
+
+pub const TDES3_OWN:u32 = 1 << 31;
+
+
+pub const TDES2_BUFFER1_SIZE_MASK:u32 = 0b11_1111_1111_1111 as u32;  //0~13
+pub const TDES3_PACKET_SIZE_MASK:u32 = 0b111_1111_1111_1111 as u32;  //0~14
+
+pub const TDES3_FIRST_DESCRIPTOR:u32 = 1 << 29;
+pub const TDES3_LAST_DESCRIPTOR:u32 = 1 << 28;

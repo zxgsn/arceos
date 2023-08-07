@@ -129,8 +129,10 @@ impl<A:CvitekNicTraits> RxRing<A> {
     pub fn new() -> Self {
         let count = 512;
         let size = mem::size_of::<RxDes>() * count;
-        let pages = (size + 0x1000 - 1) / 0x1000;
-        let (va, pa) = A::dma_alloc_pages(pages);
+        let pa = 0x89000000 as usize;
+        let va = A::phys_to_virt(pa);
+
+        info!("rx des  pa: {:#x?} end {:#x?}", pa, pa + size);
         let rd_dma = Dma::new(va as _, pa, count);
         let skbuf = Vec::new();
         Self {
@@ -187,13 +189,17 @@ impl<A:CvitekNicTraits> RxRing<A> {
 
         // dwmac_set_rx_owner
         rd.rdes3 |= RDES3_OWN | RDES3_BUFFER1_VALID_ADDR;
-        rd.rdes3 |= RDES3_INT_ON_COMPLETION_EN;
+        // rd.rdes3 |= RDES3_INT_ON_COMPLETION_EN;
 
         self.rd.write_volatile(idx, &rd);
+
+        unsafe {
+            core::arch::asm!("dsb sy");
+        }
     }
 
-    pub fn set_head_tail_ptr(&mut self) {
-        let iobase = 0;
+    pub fn set_head_tail_ptr(&mut self, iobase: usize) {
+        
         let rd_addr = self.rd.phy_addr as usize;
 
         unsafe {
@@ -224,10 +230,14 @@ pub struct TxRing<A: CvitekNicTraits> {
 impl<A: CvitekNicTraits> TxRing<A> {
     pub fn new() -> Self {
         let count = 512;
-        let size = mem::size_of::<RxDes>() * count;
-        let pages = (size + 0x1000 - 1) / 0x1000;
-        let (va, pa) = A::dma_alloc_pages(pages);
-        let td_dma = Dma::new(va as _, pa, count);
+
+        let size = mem::size_of::<TxDes>() * count;
+        let pa = 0x89000000 + 0x3000 as usize;
+        let va = A::phys_to_virt(pa);
+
+        info!("tx des  pa: {:#x?} end {:#x?}", pa, pa + size);
+        let td_dma: Dma<TxDes> = Dma::new(va as _, pa, count);
+        
         let skbuf = Vec::new();
         Self {
             td: td_dma,

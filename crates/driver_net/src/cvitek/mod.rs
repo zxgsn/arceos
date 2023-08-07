@@ -73,7 +73,7 @@ where
             write_volatile((vapinbase + 8) as *mut u32, 0x1fdff);
         }
 
-        info!("-----------------bst_nic init-----------------");
+        info!("-----------------cvitek_nic init-----------------");
 
         let iobase = A::phys_to_virt(0x30000000);
         /*select phy*/
@@ -140,11 +140,11 @@ impl<A:CvitekNicTraits> NetDriverOps for CvitekNic<A> {
     }
 
     fn can_receive(&self) -> bool {
-        false
+        true
     }
 
     fn can_transmit(&self) -> bool {
-        false
+        true
     }
 
     fn recycle_tx_buffers(&mut self) -> DevResult {
@@ -187,12 +187,14 @@ impl<A:CvitekNicTraits> NetDriverOps for CvitekNic<A> {
     }
 
     fn receive(&mut self) -> DevResult<RxBuf> {
-        // todo!()
-        let packet = self.device.receive().unwrap();
-
         use cvitek_nic::RxBuffer;
-        let rxbuf = RxBuffer { packet };
-        Ok(RxBuf::CvitekNic(rxbuf))
+        if let Some(packet) = self.device.receive() {
+            info!("rxbuf.packet = {:x?}", packet.as_bytes());
+            let rxbuf = RxBuffer { packet };
+            Ok(RxBuf::CvitekNic(rxbuf))
+        } else {
+            Err(DevError::Again)
+        }
     }
 }
 

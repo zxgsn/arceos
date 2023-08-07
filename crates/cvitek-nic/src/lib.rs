@@ -11,6 +11,7 @@ mod cvitek_main;
 pub use cvitek_main::CvitekNicDevice;
 pub use cvitek_main::CvitekNicTraits;
 pub use cvitek_main::Packet;
+// pub use cvitek_main::Dma;
 
 pub struct RxBuffer {
     pub packet: Packet,
