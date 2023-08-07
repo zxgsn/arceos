@@ -3,14 +3,15 @@ mod listen_table;
 mod tcp;
 mod udp;
 
-use alloc::vec;
+use alloc::sync::Arc;
+use alloc::{boxed::Box, collections::VecDeque, vec};
 use core::cell::RefCell;
 use core::ops::DerefMut;
 
 use axdriver::prelude::*;
 use axhal::time::{current_time_nanos, NANOS_PER_MICROS};
 use axsync::Mutex;
-use driver_net::{DevError, NetBufPtr};
+use driver_net::{DevError, NetBufPtr, NetBufPool, RxBuf, TxBuf};
 use lazy_init::LazyInit;
 use smoltcp::iface::{Config, Interface, SocketHandle, SocketSet};
 use smoltcp::phy::{Device, DeviceCapabilities, Medium, RxToken, TxToken};
@@ -35,16 +36,25 @@ const TCP_RX_BUF_LEN: usize = 64 * 1024;
 const TCP_TX_BUF_LEN: usize = 64 * 1024;
 const UDP_RX_BUF_LEN: usize = 64 * 1024;
 const UDP_TX_BUF_LEN: usize = 64 * 1024;
+const RX_BUF_QUEUE_SIZE: usize = 64;
 const LISTEN_QUEUE_SIZE: usize = 512;
+
+const NET_BUF_POOL_SIZE: usize = 128;
+const NET_BUF_LEN: usize = 1526;
+
+static NET_BUF_POOL: LazyInit<NetBufPool> = LazyInit::new();
 
 static LISTEN_TABLE: LazyInit<ListenTable> = LazyInit::new();
 static SOCKET_SET: LazyInit<SocketSetWrapper> = LazyInit::new();
 static ETH0: LazyInit<InterfaceWrapper> = LazyInit::new();
 
+unsafe impl Sync for InterfaceWrapper {}
+unsafe impl Send for InterfaceWrapper {}
 struct SocketSetWrapper<'a>(Mutex<SocketSet<'a>>);
 
 struct DeviceWrapper {
     inner: RefCell<AxNetDevice>, // use `RefCell` is enough since it's wrapped in `Mutex` in `InterfaceWrapper`.
+    rx_buf_queue: VecDeque<RxBuf>,
 }
 
 struct InterfaceWrapper {
@@ -169,7 +179,31 @@ impl DeviceWrapper {
     fn new(inner: AxNetDevice) -> Self {
         Self {
             inner: RefCell::new(inner),
+            rx_buf_queue: VecDeque::with_capacity(RX_BUF_QUEUE_SIZE),
         }
+    }
+
+    fn poll<F>(&mut self, f: F)
+    where
+        F: Fn(&[u8]),
+    {
+        while self.rx_buf_queue.len() < RX_BUF_QUEUE_SIZE {
+            match self.inner.borrow_mut().receive() {
+                Ok(buf) => {
+                    f(buf.packet());
+                    self.rx_buf_queue.push_back(buf);
+                }
+                Err(DevError::Again) => break, // TODO: better method to avoid error type conversion
+                Err(err) => {
+                    warn!("receive failed: {:?}", err);
+                    break;
+                }
+            }
+        }
+    }
+
+    fn receive(&mut self) -> Option<RxBuf> {
+        self.rx_buf_queue.pop_front()
     }
 }
 
@@ -221,7 +255,7 @@ impl Device for DeviceWrapper {
     }
 }
 
-struct AxNetRxToken<'a>(&'a RefCell<AxNetDevice>, NetBufPtr);
+struct AxNetRxToken<'a>(&'a RefCell<AxNetDevice>, RxBuf);
 struct AxNetTxToken<'a>(&'a RefCell<AxNetDevice>);
 
 impl<'a> RxToken for AxNetRxToken<'a> {
@@ -236,11 +270,14 @@ impl<'a> RxToken for AxNetRxToken<'a> {
         let mut rx_buf = self.1;
         trace!(
             "RECV {} bytes: {:02X?}",
-            rx_buf.packet_len(),
+            rx_buf.packet().len(),
             rx_buf.packet()
         );
         let result = f(rx_buf.packet_mut());
-        self.0.borrow_mut().recycle_rx_buffer(rx_buf).unwrap();
+        match rx_buf {
+            RxBuf::CvitekNic(_) => {}
+            RxBuf::Virtio(rx_buf) => self.0.borrow_mut().recycle_rx_buffer(rx_buf).unwrap(),
+        }
         result
     }
 }
@@ -251,10 +288,23 @@ impl<'a> TxToken for AxNetTxToken<'a> {
         F: FnOnce(&mut [u8]) -> R,
     {
         let mut dev = self.0.borrow_mut();
-        let mut tx_buf = dev.alloc_tx_buffer(len).unwrap();
+        let mut tx_buf = match dev.alloc_tx_buffer(len) {
+            Ok(tx_buf) => tx_buf,
+            Err(err) => match err {
+                DevError::Unsupported => {
+                    // TODO! Fix the bug!!!
+                    // let mut tx_buf = Arc::new(*NET_BUF_POOL.try_get().unwrap()).alloc().unwrap();
+                    // dev.prepare_tx_buffer(&mut tx_buf, len).unwrap();
+                    // TxBuf::Virtio(Box::new(tx_buf).into_buf_ptr())
+                    panic!("{:?}", err)
+                }
+                _ => panic!("{:?}", err),
+            },
+        };
+
         let ret = f(tx_buf.packet_mut());
         trace!("SEND {} bytes: {:02X?}", len, tx_buf.packet());
-        dev.transmit(tx_buf).unwrap();
+        dev.transmit(tx_buf);
         ret
     }
 }
@@ -288,6 +338,13 @@ pub fn poll_interfaces() {
 }
 
 pub(crate) fn init(net_dev: AxNetDevice) {
+    /*
+    // TODO fix the bug
+    let pool = NetBufPool::new(NET_BUF_POOL_SIZE, NET_BUF_LEN).unwrap();
+    NET_BUF_POOL.init_by(pool);
+    net_dev.fill_rx_buffers(&NET_BUF_POOL).unwrap();
+    */
+
     let ether_addr = EthernetAddress(net_dev.mac_address().0);
     let eth0 = InterfaceWrapper::new("eth0", net_dev, ether_addr);
     eth0.setup_ip_addr(IP, IP_PREFIX);
