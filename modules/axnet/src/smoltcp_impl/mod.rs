@@ -5,8 +5,9 @@ mod udp;
 
 use alloc::sync::Arc;
 use alloc::{boxed::Box, collections::VecDeque, vec};
+use core::borrow::BorrowMut;
 use core::cell::RefCell;
-use core::ops::DerefMut;
+use core::ops::{DerefMut, Deref};
 
 use axdriver::prelude::*;
 use axhal::time::{current_time_nanos, NANOS_PER_MICROS};
@@ -292,10 +293,10 @@ impl<'a> TxToken for AxNetTxToken<'a> {
             Ok(tx_buf) => tx_buf,
             Err(err) => match err {
                 DevError::Unsupported => {
-                    // TODO! Fix the bug!!!
-                    // let mut tx_buf = Arc::new(*NET_BUF_POOL.try_get().unwrap()).alloc().unwrap();
+                    // TODO! Fix the bug!!!  or we can ignore this error handle temporarily
+                    // let mut tx_buf = NET_BUF_POOL.alloc().unwrap();
                     // dev.prepare_tx_buffer(&mut tx_buf, len).unwrap();
-                    // TxBuf::Virtio(Box::new(tx_buf).into_buf_ptr())
+                    // TxBuf::Virtio(Box::new(tx_buf).into_buf_ptr());
                     panic!("{:?}", err)
                 }
                 _ => panic!("{:?}", err),
@@ -337,13 +338,13 @@ pub fn poll_interfaces() {
     SOCKET_SET.poll_interfaces();
 }
 
-pub(crate) fn init(net_dev: AxNetDevice) {
-    /*
-    // TODO fix the bug
-    let pool = NetBufPool::new(NET_BUF_POOL_SIZE, NET_BUF_LEN).unwrap();
+pub(crate) fn init(mut net_dev: AxNetDevice) {
+    
+    let arc_pool = NetBufPool::new(NET_BUF_POOL_SIZE, NET_BUF_LEN).unwrap();
+    let pool = Arc::into_inner(arc_pool).unwrap();
     NET_BUF_POOL.init_by(pool);
     net_dev.fill_rx_buffers(&NET_BUF_POOL).unwrap();
-    */
+    
 
     let ether_addr = EthernetAddress(net_dev.mac_address().0);
     let eth0 = InterfaceWrapper::new("eth0", net_dev, ether_addr);
