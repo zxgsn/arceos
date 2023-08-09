@@ -1,16 +1,16 @@
 use driver_common::{DevError, DevResult};
 use core::ptr::{write_volatile,read_volatile};
 use super::consts::*;
-use super::BstNicTraits;
+use super::CvitekNicTraits;
 
 
 /// Memory Barrier
-pub fn dmb() {
+/*pub fn dmb() {
     unsafe {
         core::arch::asm!("dmb sy");
     }
-}
-fn bst_assert(top_crm: usize)
+}*/
+fn cvitek_assert(top_crm: usize)
 {
     let addr=top_crm + 0x2180;
     let reg = 0xc03;
@@ -19,7 +19,7 @@ fn bst_assert(top_crm: usize)
         write_volatile(addr as *mut u32, reg as _); 
     }
 }
-fn bst_deassert(top_crm: usize)
+fn cvitek_deassert(top_crm: usize)
 {
     let addr=top_crm + 0x2180;
     let reg = 0xc0b;
@@ -30,10 +30,10 @@ fn bst_deassert(top_crm: usize)
 }
 pub fn reset(top_crm: usize)
 {
-    bst_assert(top_crm);
-    bst_deassert(top_crm);
+    cvitek_assert(top_crm);
+    cvitek_deassert(top_crm);
 }
-pub fn dwmac_dma_reset<A: BstNicTraits>(iobase: usize, top_crm: usize)
+pub fn dwmac_dma_reset<A: CvitekNicTraits>(iobase: usize, top_crm: usize)
 {
     unsafe{
         let mut limit:i32 = 10;
@@ -236,7 +236,7 @@ pub fn select_phy(id: usize,top_crm: usize) {
         write_volatile(addr as *mut u32, reg_val as _);
     }
 }
-pub fn phylink_up<A: BstNicTraits>(iobase:usize)
+pub fn phylink_up<A: CvitekNicTraits>(iobase:usize)
 {
     let ctrl:u32 = 0x8002003;
     unsafe{

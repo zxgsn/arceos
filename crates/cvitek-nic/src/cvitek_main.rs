@@ -193,9 +193,9 @@ impl<A:CvitekNicTraits> RxRing<A> {
 
         self.rd.write_volatile(idx, &rd);
 
-        unsafe {
+        /*unsafe {
             core::arch::asm!("dsb sy");
-        }
+        }*/
     }
 
     pub fn set_head_tail_ptr(&mut self, iobase: usize) {
