@@ -12,6 +12,7 @@ members = [
     "apps/net/httpserver",
     "apps/net/udpserver",
     "apps/net/cvitek_nic_test",
+    "apps/net/cvitek_nic_httpserver_test",
     "apps/task/parallel",
     "apps/task/sleep",
     "apps/task/yield",

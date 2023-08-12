@@ -1,5 +1,5 @@
 [package]
-name = "cvitek_nic_test"
+name = "cvitek_nic_httpserver_test"
 version = "0.1.0"
 edition = "2021"
 
