@@ -606,6 +606,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "cvitek_nic_httpserver_test"
+version = "0.1.0"
+dependencies = [
+ "axfs",
+ "axfs_ramfs",
+ "axfs_vfs",
+ "crate_interface",
+ "libax",
+]
+
+[[package]]
 name = "cvitek_nic_test"
 version = "0.1.0"
 dependencies = [
